@@ -616,8 +616,17 @@ window.onload = function(){
     entryModal = new bootstrap.Modal(document.getElementById('entryModal'));
     
     const storedUser = safeLocalStorage('get', 'glyco_last_user');
-    if(storedUser) currentUser = storedUser;
-    document.getElementById('userName').innerText = currentUser;
+    if(storedUser) {
+      currentUser = storedUser;
+    }
+
+    // AJOUT 1 : Si aucun utilisateur n'existe encore dans localStorage → on affiche "Ajouter un utilisateur"
+    const allUserKeys = Object.keys(localStorage).filter(k => k.startsWith(DB_PREFIX) && k.endsWith('_data'));
+    if (!storedUser && allUserKeys.length === 0) {
+      document.getElementById('userName').innerText = "Ajouter un utilisateur";
+    } else {
+      document.getElementById('userName').innerText = currentUser;
+    }
 
     loadData();
     loadSettings();
@@ -631,6 +640,16 @@ window.onload = function(){
     
     checkAutoBackup();
     scheduleNotifications();
+
+    // AJOUT 2 : Gestion du clic sur le nom d'utilisateur (ouvre le gestionnaire si "Ajouter..." ou switchUser sinon)
+    document.querySelector('.user-chip').onclick = function() {
+      if (document.getElementById('userName').innerText.includes('Ajouter')) {
+        showUserManager();
+      } else {
+        showUserManager(); // on utilise maintenant showUserManager() à la place de switchUser()
+      }
+    };
+
   } catch(e) {
     showToast('Erreur initialisation: ' + e.message, 'error');
   }
@@ -894,19 +913,132 @@ function checkAutoBackup() {
   }
 }
 
-function switchUser(){
-  const name = prompt("Changer d'utilisateur ? Entrez le nom :", currentUser);
-  if(name && name.trim()){
-    currentUser = name.trim();
+function switchUser() {
+  showUserManager();
+}
+
+function showUserManager() {
+  // Récupère tous les utilisateurs existants
+  const allKeys = Object.keys(localStorage);
+  const userKeys = allKeys
+    .filter(k => k.startsWith(DB_PREFIX) && k.endsWith('_data'))
+    .map(k => k.replace(DB_PREFIX, '').replace('_data', ''));
+
+  let html = '<div style="max-height:70vh;overflow-y:auto;">';
+
+  if (userKeys.length === 0) {
+    html += `<div class="text-center p-4 text-muted">
+              <i class="fa-solid fa-users fa-3x mb-3 opacity-50"></i>
+              <div>Aucun utilisateur</div>
+             </div>`;
+  } else {
+    userKeys.sort().forEach(user => {
+      const isCurrent = user === currentUser;
+      html += `
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+          <div class="fw-bold ${isCurrent ? 'text-primary' : ''}">
+            ${isCurrent ? '➤ ' : ''}${user}
+          </div>
+          <div class="d-flex gap-2">
+            ${!isCurrent ? `<button class="btn btn-sm btn-outline-primary" onclick="selectUser('${user}')">
+                              Choisir
+                            </button>` : ''}
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('${user}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>`;
+    });
+  }
+
+  html += `</div>
+           <div class="p-3 border-top">
+             <button class="btn btn-primary w-100" onclick="addNewUser()">
+               <i class="fa-solid fa-plus me-2"></i> Ajouter un utilisateur
+             </button>
+           </div>`;
+
+  // Utilise un simple prompt stylisé avec innerHTML (ou tu peux créer un vrai modal plus tard)
+  const div = document.createElement('div');
+  div.innerHTML = `
+    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:var(--surface);border-radius:20px;max-width:400px;width:100%;max-height:90vh;overflow:hidden;">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fa-solid fa-users"></i> Gestion des utilisateurs</h5>
+          <button class="btn-close" onclick="this.closest('div').parentElement.remove()"></button>
+        </div>
+        ${html}
+      </div>
+    </div>`;
+  document.body.appendChild(div);
+}
+
+/* --- VALIDATION --- */
+
+function addNewUser() {
+  const name = prompt("Nom du nouvel utilisateur :");
+  if (!name || !name.trim()) return;
+
+  const trimmed = name.trim();
+  if (trimmed.length < 2) {
+    alert("Le nom doit faire au moins 2 caractères");
+    return;
+  }
+
+  // Vérifie si déjà existant
+  const exists = Object.keys(localStorage).some(k => 
+    k === DB_PREFIX + trimmed + '_data'
+  );
+  if (exists) {
+    alert("Cet utilisateur existe déjà !");
+    return;
+  }
+
+  currentUser = trimmed;
+  safeLocalStorage('set', 'glyco_last_user', currentUser);
+  document.getElementById('userName').innerText = currentUser;
+  entries = [];
+  medicalData = [];
+  saveData();
+  loadData();
+  navTo('home');
+  showToast('Utilisateur créé : ' + currentUser, 'success');
+
+  // Ferme le gestionnaire
+  document.querySelector('.btn-close')?.closest('div').parentElement.remove();
+}
+
+function selectUser(user) {
+  if (user === currentUser) {
+    document.querySelector('.btn-close')?.closest('div').parentElement.remove();
+    return;
+  }
+
+  if (confirm(`Passer à l'utilisateur "${user}" ?\n\nVos données actuelles non sauvegardées seront perdues si vous n'avez pas sauvegardé.`)) {
+    currentUser = user;
     safeLocalStorage('set', 'glyco_last_user', currentUser);
     document.getElementById('userName').innerText = currentUser;
     loadData();
     navTo('home');
-    showToast('Utilisateur changé: ' + currentUser, 'success');
+    showToast('Utilisateur : ' + currentUser, 'success');
+    document.querySelector('.btn-close')?.closest('div').parentElement.remove();
   }
 }
 
-/* --- VALIDATION --- */
+function deleteUser(user) {
+  if (user === currentUser) {
+    alert("Vous ne pouvez pas supprimer l'utilisateur actuellement sélectionné !");
+    return;
+  }
+
+  if (confirm(`Supprimer définitivement l'utilisateur "${user}" et toutes ses données ?`)) {
+    safeLocalStorage('remove', DB_PREFIX + user + '_data');
+    safeLocalStorage('remove', DB_PREFIX + user + '_med');
+    showToast('Utilisateur supprimé : ' + user, 'warning');
+    showUserManager(); // Rafraîchir la liste
+  }
+}
+
 function validateForm() {
   let isValid = true;
   
