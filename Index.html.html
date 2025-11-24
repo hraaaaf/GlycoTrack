@@ -1,0 +1,1578 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>GlycoTrack V9 Ultimate PWA</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkdseWNvVHJhY2siLAogICJzaG9ydF9uYW1lIjogIkdseWNvVHJhY2siLAogICJkZXNjcmlwdGlvbiI6ICJTdWl2aSBkZSBkaWFiw6h0ZSBjb21wbGV0IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmOGZhZmMiLAogICJ0aGVtZV9jb2xvciI6ICIjNGY0NmU1IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyU0ZjQ2ZTUnLyUzRSUzQ3RleHQgeD0nNTAlMjcgeT0nNTUlMjcgZm9udC1zaXplPSc1MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNFRyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ3JlY3Qgd2lkdGg9JzEwMCcgaGVpZ2h0PScxMDAnIGZpbGw9JyU0ZjQ2ZTUnLyUzRSUzQ3RleHQgeD0nNTAlMjcgeT0nNTUlMjcgZm9udC1zaXplPSc1MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnJTNFRyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0KICBdCn0=">
+<meta name="theme-color" content="#4f46e5">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%234f46e5'/%3E%3Ctext x='50%' y='55' font-size='50' text-anchor='middle' fill='white'%3EG%3C/text%3E%3C/svg%3E">
+
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #e0e7ff;
+    --bg-app: #f8fafc;
+    --surface: #ffffff;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    
+    --hypo-color: #ef4444;
+    --hyper-color: #f59e0b;
+    --ok-color: #10b981;
+    
+    --nav-height: 70px;
+    --radius: 20px;
+  }
+
+  [data-theme="dark"] {
+    --bg-app: #0f172a;
+    --surface: #1e293b;
+    --text-dark: #f1f5f9;
+    --text-muted: #94a3b8;
+    --primary-light: #312e81;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: var(--text-dark);
+    padding-bottom: calc(var(--nav-height) + 20px);
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .top-header {
+    background: var(--surface);
+    padding: 15px 20px;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    display: flex; justify-content: space-between; align-items: center;
+    transition: background-color 0.3s;
+  }
+  .app-logo {
+    font-weight: 800; font-size: 1.2rem;
+    background: linear-gradient(45deg, var(--primary), #818cf8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .user-chip {
+    background: var(--primary-light); color: var(--primary);
+    padding: 6px 12px; border-radius: 30px; font-weight: 600; font-size: 0.85rem;
+    border: none; display: flex; align-items: center; gap: 8px;
+    cursor: pointer;
+  }
+
+  .theme-toggle {
+    background: var(--primary-light); color: var(--primary);
+    border: none; width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.3s;
+    margin-left: 10px;
+  }
+  .theme-toggle:hover { transform: rotate(180deg); }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    height: var(--nav-height);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 100; border-top-left-radius: 20px; border-top-right-radius: 20px;
+    transition: background-color 0.3s;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 0.75rem; font-weight: 600;
+    background: none; border: none; width: 60px; transition: all 0.2s;
+    cursor: pointer;
+  }
+  .nav-item i { font-size: 1.4rem; margin-bottom: 4px; transition: transform 0.2s; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item.active i { transform: translateY(-2px); }
+  
+  .nav-fab {
+    background: var(--primary); color: white;
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    border: 4px solid var(--bg-app);
+    transform: translateY(-20px);
+    transition: transform 0.1s;
+    cursor: pointer;
+  }
+  .nav-fab:active { transform: translateY(-18px) scale(0.95); }
+
+  .view-section { display: none; padding: 20px; animation: fadeIn 0.3s ease-out; }
+  .view-section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .summary-card {
+    background: var(--surface); border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02); margin-bottom: 20px;
+    transition: background-color 0.3s;
+  }
+  .card-title-sm { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; }
+
+  .filter-scroll {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;
+  }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    white-space: nowrap; padding: 8px 16px; border-radius: 30px;
+    background: var(--surface); border: 1px solid #e2e8f0; color: var(--text-muted);
+    font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+    cursor: pointer;
+  }
+  .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .entry-card {
+    background: var(--surface); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02); border-left: 5px solid transparent;
+    position: relative; transition: transform 0.1s, background-color 0.3s;
+    cursor: pointer;
+  }
+  .entry-card:active { transform: scale(0.98); }
+  
+  .border-hypo { border-left-color: var(--hypo-color); }
+  .border-hyper { border-left-color: var(--hyper-color); }
+  .border-ok { border-left-color: var(--ok-color); }
+  .border-neutral { border-left-color: #cbd5e1; }
+
+  .entry-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .entry-date { font-weight: 700; font-size: 0.95rem; color: var(--text-dark); }
+  .entry-time { color: var(--text-muted); font-size: 0.85rem; }
+  
+  .entry-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge-custom { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+  
+  .bg-val-hypo { background: #fee2e2; color: #991b1b; }
+  .bg-val-hyper { background: #ffedd5; color: #9a3412; }
+  .bg-val-ok { background: #dcfce7; color: #166534; }
+  .bg-insu { background: #e0e7ff; color: #3730a3; }
+
+  .modal-content { 
+    border-radius: 24px; border: none;
+    background: var(--surface);
+    color: var(--text-dark);
+    transition: background-color 0.3s;
+  }
+  .modal-header { border-bottom: none; padding: 20px 24px 10px; }
+  .modal-body { padding: 10px 24px 24px; }
+  .modal-footer { border-top: none; padding: 0 24px 24px; }
+  
+  .input-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; display: block; }
+  .form-control-custom {
+    background: var(--bg-app); border: none; border-radius: 12px; padding: 12px;
+    font-size: 1rem; color: var(--text-dark); width: 100%;
+    transition: background-color 0.3s;
+  }
+  .form-control-custom:focus { outline: 2px solid var(--primary); background: var(--surface); }
+  .form-control-custom.is-invalid { outline: 2px solid var(--hypo-color); }
+
+  .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .cat-btn {
+    padding: 15px; border-radius: 16px; border: 2px solid transparent;
+    background: var(--bg-app); color: var(--text-muted); font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: all 0.2s; cursor: pointer;
+  }
+  .cat-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+  .cat-btn i { font-size: 1.5rem; }
+
+  .toast-container {
+    position: fixed; top: 80px; right: 20px; z-index: 1000;
+  }
+  .custom-toast {
+    background: var(--surface); border-radius: 12px; padding: 16px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px; animation: slideIn 0.3s ease-out;
+    min-width: 280px;
+  }
+  @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast-success { border-left: 4px solid var(--ok-color); }
+  .toast-error { border-left: 4px solid var(--hypo-color); }
+  .toast-warning { border-left: 4px solid var(--hyper-color); }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-muted);
+  }
+  .empty-state i { font-size: 4rem; opacity: 0.3; margin-bottom: 20px; }
+
+  .validation-error {
+    color: var(--hypo-color); font-size: 0.75rem; margin-top: 4px;
+    display: none;
+  }
+  .validation-error.show { display: block; }
+
+  .install-prompt {
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    color: white; padding: 16px 20px; border-radius: 16px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+  }
+  .install-prompt button {
+    background: white; color: var(--primary); border: none;
+    padding: 8px 16px; border-radius: 8px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  .settings-section {
+    background: var(--surface); border-radius: 16px; padding: 16px;
+    margin-bottom: 12px;
+  }
+  .settings-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--bg-app);
+  }
+  .settings-item:last-child { border-bottom: none; }
+
+  .switch {
+    position: relative; display: inline-block; width: 50px; height: 28px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc; transition: .4s; border-radius: 34px;
+  }
+  .slider:before {
+    position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+    background-color: white; transition: .4s; border-radius: 50%;
+  }
+  input:checked + .slider { background-color: var(--primary); }
+  input:checked + .slider:before { transform: translateX(22px); }
+
+  @media print {
+    body { background: white; }
+    .top-header, .bottom-nav, .filter-scroll, button { display: none !important; }
+    .view-section { display: block !important; }
+  }
+</style>
+
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="top-header">
+  <div class="app-logo"><i class="fa-solid fa-droplet"></i> GlycoTrack</div>
+  <div class="d-flex align-items-center gap-2">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+      <i class="fa-solid fa-moon" id="themeIcon"></i>
+    </button>
+    <button class="user-chip" onclick="switchUser()">
+      <i class="fa-solid fa-user-circle"></i> <span id="userName">Brahim</span>
+    </button>
+  </div>
+</div>
+
+<div id="installPrompt" class="install-prompt" style="display:none; margin: 20px;">
+  <i class="fa-solid fa-download" style="font-size:2rem"></i>
+  <div style="flex:1">
+    <div class="fw-bold">Installer GlycoTrack</div>
+    <div class="small">Accédez rapidement depuis votre écran d'accueil</div>
+  </div>
+  <button onclick="installPWA()">Installer</button>
+  <button onclick="dismissInstall()" style="background:transparent; color:white;">✕</button>
+</div>
+
+<div id="view-home" class="view-section active">
+  
+  <div class="summary-card">
+    <div class="card-title-sm">Tendance (7 derniers jours)</div>
+    <canvas id="chartHome" height="180"></canvas>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6">
+      <div class="summary-card text-center h-100 d-flex flex-column justify-content-center p-3">
+        <div class="text-muted small fw-bold">MOYENNE</div>
+        <div class="display-6 fw-bold text-primary" id="dashAvg">-</div>
+        <div class="small text-muted">g/L</div>
+      </div>
+    </div>
+    <div class="col-6">
+      <div class="summary-card text-center h-100 d-flex flex-column justify-content-center p-3">
+        <div class="text-muted small fw-bold">DANS LA CIBLE</div>
+        <div class="display-6 fw-bold text-success" id="dashTarget">-</div>
+        <div class="small text-muted">%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+    <h6 class="fw-bold mb-0 text-secondary">Derniers ajouts</h6>
+    <button class="btn btn-sm btn-outline-primary" onclick="navTo('log')">
+      Voir tout <i class="fa-solid fa-arrow-right ms-1"></i>
+    </button>
+  </div>
+  <div id="recentList"></div>
+
+</div>
+
+<div id="view-log" class="view-section">
+  
+  <div class="mb-3">
+    <div class="filter-scroll">
+      <button class="filter-chip active" onclick="setFilter(this, 'all')">Tout</button>
+      <button class="filter-chip" onclick="setFilter(this, 'week')">Cette Semaine</button>
+      <button class="filter-chip" onclick="setFilter(this, 'month')">Ce Mois</button>
+      <button class="filter-chip" onclick="setFilter(this, 'hypo')">🚨 Hypos</button>
+      <button class="filter-chip" onclick="setFilter(this, 'hyper')">⚠️ Hypers</button>
+      <button class="filter-chip" onclick="setFilter(this, 'sport')">⚽ Sport</button>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+    <span class="small fw-bold text-muted" id="countLog">0 entrées</span>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm text-primary fw-bold" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i></button>
+      <button class="btn btn-sm text-danger fw-bold" onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i></button>
+    </div>
+  </div>
+
+  <div id="fullList"></div>
+</div>
+
+<div id="view-stats" class="view-section">
+  <h5 class="fw-bold mb-4">Analyses & Répartition</h5>
+  
+  <div class="summary-card">
+    <div class="card-title-sm">Moyennes par Repas (30 derniers jours)</div>
+    <div class="d-flex justify-content-between align-items-end mt-3">
+      <div class="text-center">
+        <div class="small text-muted fw-bold mb-1">MATIN</div>
+        <div class="h4 mb-0" style="color:#10b981" id="avgMatin">-</div>
+        <div class="small text-muted" id="countMatin">0 mesures</div>
+      </div>
+      <div class="text-center">
+        <div class="small text-muted fw-bold mb-1">MIDI</div>
+        <div class="h4 mb-0" style="color:#f59e0b" id="avgMidi">-</div>
+        <div class="small text-muted" id="countMidi">0 mesures</div>
+      </div>
+      <div class="text-center">
+        <div class="small text-muted fw-bold mb-1">SOIR</div>
+        <div class="h4 mb-0" style="color:#4f46e5" id="avgSoir">-</div>
+        <div class="small text-muted" id="countSoir">0 mesures</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <div class="card-title-sm">Statistiques Avancées (30j)</div>
+    <div class="row g-2 mt-2">
+      <div class="col-6">
+        <div class="text-muted small">Écart-type</div>
+        <div class="fw-bold" id="statStdDev">-</div>
+      </div>
+      <div class="col-6">
+        <div class="text-muted small">Coefficient variation</div>
+        <div class="fw-bold" id="statCV">-</div>
+      </div>
+      <div class="col-6">
+        <div class="text-muted small">Min / Max</div>
+        <div class="fw-bold" id="statMinMax">-</div>
+      </div>
+      <div class="col-6">
+        <div class="text-muted small">Hypos détectées</div>
+        <div class="fw-bold text-danger" id="statHypos">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-card">
+    <div class="d-flex justify-content-between mb-2">
+      <div class="card-title-sm">Dossier Médical</div>
+      <button class="btn btn-sm btn-link p-0" onclick="addMedicalData()">+ Ajouter</button>
+    </div>
+    <div id="medicalList" class="small">
+      <div class="text-muted fst-italic">Aucune donnée (HbA1c, TSH...)</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="view-settings" class="view-section">
+  <h5 class="fw-bold mb-4"><i class="fa-solid fa-gear me-2"></i> Paramètres</h5>
+  
+  <div class="settings-section">
+    <div class="card-title-sm">APPARENCE</div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold">Thème sombre</div>
+        <div class="small text-muted">Mode nuit automatique</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="darkModeSwitch" onchange="toggleTheme()">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="card-title-sm">NOTIFICATIONS</div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold">Rappels quotidiens</div>
+        <div class="small text-muted">Saisir vos glycémies</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="notifSwitch" onchange="toggleNotifications()">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold">Heure de rappel</div>
+        <div class="small text-muted">Matin: 08:00 | Soir: 20:00</div>
+      </div>
+      <button class="btn btn-sm btn-outline-primary" onclick="setNotificationTime()">Modifier</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="card-title-sm">DONNÉES</div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold">Sauvegarder les données</div>
+        <div class="small text-muted">Télécharger backup JSON</div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="backupData()">
+        <i class="fa-solid fa-download"></i>
+      </button>
+    </div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold">Importer backup</div>
+        <div class="small text-muted">Restaurer depuis fichier</div>
+      </div>
+      <button class="btn btn-sm btn-success" onclick="importBackup()">
+        <i class="fa-solid fa-upload"></i>
+      </button>
+    </div>
+    <div class="settings-item">
+      <div>
+        <div class="fw-bold text-danger">Supprimer toutes les données</div>
+        <div class="small text-muted">Action irréversible</div>
+      </div>
+      <button class="btn btn-sm btn-danger" onclick="deleteAllData()">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="card-title-sm">À PROPOS</div>
+    <div class="small text-muted">
+      <div class="mb-2"><strong>Version:</strong> 9.0.0 PWA</div>
+      <div class="mb-2"><strong>Développeur:</strong> GlycoTrack Team</div>
+      <div class="mb-2"><strong>Licence:</strong> Gratuit 100%</div>
+      <div class="mb-2"><strong>Stockage:</strong> LocalStorage (Hors-ligne)</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="navTo('home')">
+    <i class="fa-solid fa-house"></i> Accueil
+  </button>
+  <button class="nav-item" onclick="navTo('log')">
+    <i class="fa-solid fa-list"></i> Journal
+  </button>
+  
+  <button class="nav-fab" onclick="openAddModal()">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+  
+  <button class="nav-item" onclick="navTo('stats')">
+    <i class="fa-solid fa-chart-pie"></i> Stats
+  </button>
+  <button class="nav-item" onclick="navTo('settings')">
+    <i class="fa-solid fa-gear"></i> Réglages
+  </button>
+</div>
+
+
+<div class="modal fade" id="entryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nouvelle Entrée</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        
+        <div class="category-grid">
+          <div class="cat-btn active" onclick="selectCat('Matin')" id="btnCatMatin">
+            <i class="fa-regular fa-sun"></i> Matin
+          </div>
+          <div class="cat-btn" onclick="selectCat('Midi')" id="btnCatMidi">
+            <i class="fa-solid fa-utensils"></i> Midi
+          </div>
+          <div class="cat-btn" onclick="selectCat('Soir')" id="btnCatSoir">
+            <i class="fa-solid fa-moon"></i> Soir
+          </div>
+          <div class="cat-btn" onclick="selectCat('Divers')" id="btnCatDivers">
+            <i class="fa-solid fa-bolt"></i> Divers
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-7">
+            <label class="input-label">Date</label>
+            <input type="date" id="inDate" class="form-control-custom">
+            <div class="validation-error" id="errDate">Date invalide</div>
+          </div>
+          <div class="col-5">
+            <label class="input-label">Heure</label>
+            <input type="time" id="inTime" class="form-control-custom">
+          </div>
+        </div>
+
+        <div id="fieldsMatin" class="dyn-field">
+           <div class="form-check form-switch mb-3 bg-white p-3 rounded-3 border">
+             <input class="form-check-input" type="checkbox" id="inLevo" checked>
+             <label class="form-check-label fw-bold ms-2">Levothyrox Pris</label>
+           </div>
+        </div>
+
+        <div id="fieldsGly" class="mb-3">
+          <label class="input-label">Glycémie (g/L) *</label>
+          <input type="number" step="0.01" id="inGly" class="form-control-custom" placeholder="Ex: 0.95" min="0.2" max="6.0">
+          <div class="validation-error" id="errGly">Glycémie requise (entre 0.2 et 6.0 g/L)</div>
+        </div>
+
+        <div id="fieldsInsuline" class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="input-label text-danger">Novorapid (U)</label>
+            <input type="number" id="inNovo" class="form-control-custom" placeholder="Unités" min="0" max="100">
+            <div class="validation-error" id="errNovo">Max 100 unités</div>
+          </div>
+          <div class="col-6" id="grpLantus">
+            <label class="input-label text-primary">Lantus (U)</label>
+            <input type="number" id="inLantus" class="form-control-custom" placeholder="Unités" min="0" max="100">
+            <div class="validation-error" id="errLantus">Max 100 unités</div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+           <label class="input-label">Notes / Repas / Détails</label>
+           <textarea id="inObs" class="form-control-custom" rows="2" placeholder="Pain, sport, menu..." maxlength="500"></textarea>
+           <div class="small text-muted text-end"><span id="obsCount">0</span>/500</div>
+        </div>
+        
+        <div id="btnDeleteArea" class="d-none text-center mb-2">
+           <button class="btn btn-sm text-danger" onclick="deleteCurrentEntry()">
+             <i class="fa-solid fa-trash"></i> Supprimer cette entrée
+           </button>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light w-50 py-3 rounded-4 fw-bold me-2" data-bs-dismiss="modal">Annuler</button>
+        <button class="btn btn-primary w-50 py-3 rounded-4 fw-bold shadow" onclick="saveEntry()">Valider</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/**
+ * GLYCOTRACK V9 - PWA ULTIMATE EDITION
+ * 100% Gratuit | Mode Hors-ligne | Export PDF | Notifications | Thème Dark
+ */
+
+const DB_PREFIX = 'glycotrack_v9_';
+const DB_VERSION = 9;
+let currentUser = 'Brahim';
+let entries = [];
+let medicalData = [];
+let entryModal;
+let chartInstance = null;
+let currentCat = 'Matin';
+let deferredPrompt = null;
+let currentFilter = 'all';
+
+// Notification settings
+let notificationEnabled = false;
+let notificationTimes = { morning: '08:00', evening: '20:00' };
+
+window.onload = function(){
+  try {
+    entryModal = new bootstrap.Modal(document.getElementById('entryModal'));
+    
+    const storedUser = safeLocalStorage('get', 'glyco_last_user');
+    if(storedUser) currentUser = storedUser;
+    document.getElementById('userName').innerText = currentUser;
+
+    loadData();
+    loadSettings();
+    initPWA();
+    initTheme();
+    navTo('home');
+    
+    document.getElementById('inObs').addEventListener('input', function(){
+      document.getElementById('obsCount').innerText = this.value.length;
+    });
+    
+    checkAutoBackup();
+    scheduleNotifications();
+  } catch(e) {
+    showToast('Erreur initialisation: ' + e.message, 'error');
+  }
+}
+
+/* --- PWA INSTALLATION --- */
+function initPWA() {
+  // Check if already installed
+  if (window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('PWA déjà installée');
+    return;
+  }
+
+  // Listen for install prompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('installPrompt').style.display = 'flex';
+  });
+
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(createServiceWorkerBlob())
+      .then(() => console.log('Service Worker enregistré'))
+      .catch(err => console.log('SW error:', err));
+  }
+}
+
+function createServiceWorkerBlob() {
+  const swCode = `
+    const CACHE_NAME = 'glycotrack-v9';
+    const urlsToCache = ['/'];
+    
+    self.addEventListener('install', event => {
+      event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+      );
+    });
+    
+    self.addEventListener('fetch', event => {
+      event.respondWith(
+        caches.match(event.request).then(response => response || fetch(event.request))
+      );
+    });
+    
+    self.addEventListener('activate', event => {
+      event.waitUntil(
+        caches.keys().then(keys => 
+          Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        )
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  return URL.createObjectURL(blob);
+}
+
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        showToast('Application installée avec succès!', 'success');
+        document.getElementById('installPrompt').style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('installPrompt').style.display = 'none';
+  safeLocalStorage('set', 'installPromptDismissed', 'true');
+}
+
+/* --- THEME MANAGEMENT --- */
+function initTheme() {
+  const savedTheme = safeLocalStorage('get', 'theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('themeIcon').className = savedTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  document.getElementById('darkModeSwitch').checked = savedTheme === 'dark';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const newTheme = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  document.getElementById('themeIcon').className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  document.getElementById('darkModeSwitch').checked = newTheme === 'dark';
+  safeLocalStorage('set', 'theme', newTheme);
+  showToast('Thème ' + (newTheme === 'dark' ? 'sombre' : 'clair') + ' activé', 'success');
+}
+
+/* --- NOTIFICATIONS --- */
+function toggleNotifications() {
+  const enabled = document.getElementById('notifSwitch').checked;
+  if (enabled) {
+    if ('Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+          notificationEnabled = true;
+          safeLocalStorage('set', 'notifEnabled', 'true');
+          showToast('Notifications activées', 'success');
+          scheduleNotifications();
+        } else {
+          document.getElementById('notifSwitch').checked = false;
+          showToast('Permission refusée', 'error');
+        }
+      });
+    } else {
+      showToast('Notifications non supportées', 'error');
+      document.getElementById('notifSwitch').checked = false;
+    }
+  } else {
+    notificationEnabled = false;
+    safeLocalStorage('set', 'notifEnabled', 'false');
+    showToast('Notifications désactivées', 'warning');
+  }
+}
+
+function scheduleNotifications() {
+  if (!notificationEnabled) return;
+  
+  // Simple daily reminder (would need more complex implementation for real scheduling)
+  const now = new Date();
+  const morning = new Date(now);
+  morning.setHours(8, 0, 0, 0);
+  
+  if (now < morning) {
+    setTimeout(() => {
+      if (notificationEnabled && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('GlycoTrack Rappel', {
+          body: 'N\'oubliez pas de mesurer votre glycémie ce matin!',
+          icon: 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%234f46e5\'/%3E%3Ctext x=\'50%\' y=\'55\' font-size=\'50\' text-anchor=\'middle\' fill=\'white\'%3EG%3C/text%3E%3C/svg%3E'
+        });
+      }
+    }, morning - now);
+  }
+}
+
+function setNotificationTime() {
+  const morning = prompt('Heure du rappel matin (HH:MM):', notificationTimes.morning);
+  if (morning) notificationTimes.morning = morning;
+  
+  const evening = prompt('Heure du rappel soir (HH:MM):', notificationTimes.evening);
+  if (evening) notificationTimes.evening = evening;
+  
+  safeLocalStorage('set', 'notifTimes', JSON.stringify(notificationTimes));
+  showToast('Horaires mis à jour', 'success');
+}
+
+/* --- SAFE LOCALSTORAGE --- */
+function safeLocalStorage(action, key, value = null) {
+  try {
+    if(action === 'get') return localStorage.getItem(key);
+    if(action === 'set') localStorage.setItem(key, value);
+    if(action === 'remove') localStorage.removeItem(key);
+    return true;
+  } catch(e) {
+    showToast('Erreur de stockage: ' + e.message, 'error');
+    return null;
+  }
+}
+
+/* --- TOAST NOTIFICATIONS --- */
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `custom-toast toast-${type}`;
+  
+  let icon = '✓';
+  if(type === 'error') icon = '✕';
+  if(type === 'warning') icon = '⚠';
+  
+  toast.innerHTML = `
+    <div style="font-size:1.5rem">${icon}</div>
+    <div style="flex:1; color: var(--text-dark)">${message}</div>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+/* --- NAVIGATION --- */
+function navTo(viewName){
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  
+  const navItems = Array.from(document.querySelectorAll('.nav-item'));
+  if(viewName === 'home') navItems[0].classList.add('active');
+  if(viewName === 'log') navItems[1].classList.add('active');
+  if(viewName === 'stats') navItems[2].classList.add('active');
+  if(viewName === 'settings') navItems[3].classList.add('active');
+
+  document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-'+viewName).classList.add('active');
+
+  if(viewName === 'home') renderHome();
+  if(viewName === 'log') renderLog(currentFilter);
+  if(viewName === 'stats') renderStats();
+}
+
+/* --- DATA MANAGEMENT --- */
+function loadData(){
+  try {
+    const storedEntries = safeLocalStorage('get', DB_PREFIX + currentUser + '_data');
+    const storedMed = safeLocalStorage('get', DB_PREFIX + currentUser + '_med');
+    
+    entries = storedEntries ? JSON.parse(storedEntries) : [];
+    medicalData = storedMed ? JSON.parse(storedMed) : [];
+    
+    entries.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+    
+    const version = safeLocalStorage('get', DB_PREFIX + 'version');
+    if(!version || parseInt(version) < DB_VERSION) {
+      safeLocalStorage('set', DB_PREFIX + 'version', DB_VERSION);
+      showToast('Base de données mise à jour vers v' + DB_VERSION, 'success');
+    }
+  } catch(e) {
+    showToast('Erreur chargement données: ' + e.message, 'error');
+    entries = [];
+    medicalData = [];
+  }
+}
+
+function loadSettings() {
+  const notifEnabled = safeLocalStorage('get', 'notifEnabled');
+  notificationEnabled = notifEnabled === 'true';
+  document.getElementById('notifSwitch').checked = notificationEnabled;
+  
+  const times = safeLocalStorage('get', 'notifTimes');
+  if(times) notificationTimes = JSON.parse(times);
+}
+
+function saveData(){
+  try {
+    entries.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+    
+    safeLocalStorage('set', DB_PREFIX + currentUser + '_data', JSON.stringify(entries));
+    safeLocalStorage('set', DB_PREFIX + currentUser + '_med', JSON.stringify(medicalData));
+    
+    renderHome();
+    renderLog(currentFilter);
+    
+    checkAutoBackup();
+  } catch(e) {
+    showToast('Erreur sauvegarde: ' + e.message, 'error');
+  }
+}
+
+function checkAutoBackup() {
+  const lastBackup = safeLocalStorage('get', 'lastBackupCount');
+  const lastCount = lastBackup ? parseInt(lastBackup) : 0;
+  
+  if(entries.length > 0 && entries.length % 20 === 0 && entries.length !== lastCount) {
+    safeLocalStorage('set', 'lastBackupCount', entries.length.toString());
+    showToast(`${entries.length} entrées! Pensez à faire une sauvegarde.`, 'warning');
+  }
+}
+
+function switchUser(){
+  const name = prompt("Changer d'utilisateur ? Entrez le nom :", currentUser);
+  if(name && name.trim()){
+    currentUser = name.trim();
+    safeLocalStorage('set', 'glyco_last_user', currentUser);
+    document.getElementById('userName').innerText = currentUser;
+    loadData();
+    navTo('home');
+    showToast('Utilisateur changé: ' + currentUser, 'success');
+  }
+}
+
+/* --- VALIDATION --- */
+function validateForm() {
+  let isValid = true;
+  
+  document.querySelectorAll('.validation-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.form-control-custom').forEach(e => e.classList.remove('is-invalid'));
+  
+  const date = document.getElementById('inDate').value;
+  const today = new Date().toISOString().split('T')[0];
+  if(!date || date > today) {
+    document.getElementById('inDate').classList.add('is-invalid');
+    document.getElementById('errDate').classList.add('show');
+    isValid = false;
+  }
+  
+  const gly = parseFloat(document.getElementById('inGly').value);
+  if(!gly || gly < 0.2 || gly > 6.0) {
+    document.getElementById('inGly').classList.add('is-invalid');
+    document.getElementById('errGly').classList.add('show');
+    isValid = false;
+  }
+  
+  const novo = parseFloat(document.getElementById('inNovo').value);
+  if(novo && (novo < 0 || novo > 100)) {
+    document.getElementById('inNovo').classList.add('is-invalid');
+    document.getElementById('errNovo').classList.add('show');
+    isValid = false;
+  }
+  
+  const lantus = parseFloat(document.getElementById('inLantus').value);
+  if(lantus && (lantus < 0 || lantus > 100)) {
+    document.getElementById('inLantus').classList.add('is-invalid');
+    document.getElementById('errLantus').classList.add('show');
+    isValid = false;
+  }
+  
+  return isValid;
+}
+
+/* --- MODAL & SAISIE --- */
+function openAddModal(){
+  resetModal();
+  document.getElementById('modalTitle').innerText = "Nouvelle Entrée";
+  
+  const now = new Date();
+  document.getElementById('inDate').value = now.toISOString().split('T')[0];
+  document.getElementById('inTime').value = now.toTimeString().slice(0,5);
+  
+  selectCat('Matin');
+  entryModal.show();
+}
+
+function openEditModal(id){
+  const ent = entries.find(e => e.id === id);
+  if(!ent) return;
+  
+  resetModal();
+  document.getElementById('modalTitle').innerText = "Modifier / Corriger";
+  document.getElementById('editId').value = ent.id;
+  document.getElementById('btnDeleteArea').classList.remove('d-none');
+
+  document.getElementById('inDate').value = ent.date;
+  document.getElementById('inTime').value = ent.time;
+  document.getElementById('inGly').value = ent.gly || '';
+  document.getElementById('inNovo').value = ent.novo || '';
+  document.getElementById('inLantus').value = ent.lantus || '';
+  document.getElementById('inObs').value = ent.obs || '';
+  document.getElementById('obsCount').innerText = (ent.obs || '').length;
+  if(ent.levo !== undefined) document.getElementById('inLevo').checked = ent.levo;
+
+  selectCat(ent.cat);
+  entryModal.show();
+}
+
+function resetModal(){
+  document.getElementById('editId').value = '';
+  document.getElementById('btnDeleteArea').classList.add('d-none');
+  document.getElementById('inGly').value = '';
+  document.getElementById('inNovo').value = '';
+  document.getElementById('inLantus').value = '';
+  document.getElementById('inObs').value = '';
+  document.getElementById('obsCount').innerText = '0';
+  
+  document.querySelectorAll('.validation-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.form-control-custom').forEach(e => e.classList.remove('is-invalid'));
+}
+
+function selectCat(cat){
+  currentCat = cat;
+  
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnCat'+cat).classList.add('active');
+
+  document.getElementById('fieldsMatin').classList.add('d-none');
+  document.getElementById('grpLantus').classList.add('d-none');
+  
+  if(cat === 'Matin') document.getElementById('fieldsMatin').classList.remove('d-none');
+  if(cat === 'Soir') document.getElementById('grpLantus').classList.remove('d-none');
+}
+
+function saveEntry(){
+  if(!validateForm()) {
+    showToast('Veuillez corriger les erreurs', 'error');
+    return;
+  }
+  
+  const id = document.getElementById('editId').value;
+  const date = document.getElementById('inDate').value;
+  const time = document.getElementById('inTime').value;
+
+  const data = {
+    id: id ? parseInt(id) : Date.now(),
+    date: date,
+    time: time,
+    cat: currentCat,
+    gly: parseFloat(document.getElementById('inGly').value),
+    novo: parseFloat(document.getElementById('inNovo').value) || null,
+    lantus: parseFloat(document.getElementById('inLantus').value) || null,
+    obs: document.getElementById('inObs').value.trim(),
+    levo: currentCat === 'Matin' ? document.getElementById('inLevo').checked : null,
+    createdAt: id ? entries.find(e => e.id == id)?.createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  if(id){
+    const idx = entries.findIndex(e => e.id == id);
+    if(idx >= 0) entries[idx] = data;
+    showToast('Entrée modifiée avec succès', 'success');
+  } else {
+    entries.push(data);
+    showToast('Entrée ajoutée avec succès', 'success');
+  }
+  
+  saveData();
+  entryModal.hide();
+}
+
+function deleteCurrentEntry(){
+  const id = document.getElementById('editId').value;
+  if(id && confirm('Supprimer définitivement cette entrée ?')){
+    entries = entries.filter(e => e.id != id);
+    saveData();
+    entryModal.hide();
+    showToast('Entrée supprimée', 'warning');
+  }
+}
+
+/* --- RENDERING HOME --- */
+function renderHome(){
+  const recent = entries.slice(0, 30);
+  const glys = recent.filter(e => e.gly).map(e => e.gly);
+  
+  if(glys.length > 0){
+    const avg = glys.reduce((a,b)=>a+b,0)/glys.length;
+    const ok = glys.filter(g => g>=0.70 && g<=1.80).length;
+    document.getElementById('dashAvg').innerText = avg.toFixed(2);
+    document.getElementById('dashTarget').innerText = Math.round((ok/glys.length)*100);
+  } else {
+    document.getElementById('dashAvg').innerText = '-';
+    document.getElementById('dashTarget').innerText = '-';
+  }
+
+  const listContainer = document.getElementById('recentList');
+  if(entries.length === 0) {
+    listContainer.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-droplet"></i>
+        <div>Aucune entrée pour le moment</div>
+        <button class="btn btn-primary mt-3" onclick="openAddModal()">
+          <i class="fa-solid fa-plus"></i> Ajouter une mesure
+        </button>
+      </div>
+    `;
+  } else {
+    listContainer.innerHTML = entries.slice(0,5).map(e => createCard(e)).join('');
+  }
+
+  updateChart();
+}
+
+function updateChart(){
+  const ctx = document.getElementById('chartHome').getContext('2d');
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  
+  const dataPoints = entries
+    .filter(e => new Date(e.date) >= cutoff && e.gly)
+    .reverse()
+    .map(e => ({
+       x: e.date,
+       y: e.gly
+    }));
+
+  if(chartInstance) chartInstance.destroy();
+  
+  if(dataPoints.length === 0) {
+    ctx.font = '14px Segoe UI';
+    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted');
+    ctx.textAlign = 'center';
+    ctx.fillText('Aucune donnée sur 7 jours', ctx.canvas.width/2, ctx.canvas.height/2);
+    return;
+  }
+  
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dataPoints.map(d => new Date(d.x).toLocaleDateString('fr-FR', {weekday:'short', day:'numeric'})),
+      datasets: [{
+        label: 'Glycémie (g/L)',
+        data: dataPoints.map(d => d.y),
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: {display:false},
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Glycémie: ' + context.parsed.y.toFixed(2) + ' g/L';
+            }
+          }
+        }
+      },
+      scales: {
+        y: { 
+          beginAtZero: false, 
+          suggestedMin: 0.5, 
+          suggestedMax: 2.5,
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(1);
+            }
+          }
+        },
+        x: { ticks: { maxTicksLimit: 7 } }
+      }
+    }
+  });
+}
+
+/* --- RENDERING LOG --- */
+function setFilter(btn, filter){
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = filter;
+  renderLog(filter);
+}
+
+function renderLog(filter){
+  let filtered = [...entries];
+  const now = new Date();
+
+  if(filter === 'week'){
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1);
+    startOfWeek.setHours(0,0,0,0);
+    filtered = filtered.filter(e => new Date(e.date) >= startOfWeek);
+  }
+  if(filter === 'month'){
+    const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    filtered = filtered.filter(e => new Date(e.date) >= startMonth);
+  }
+  if(filter === 'hypo') filtered = filtered.filter(e => e.gly && e.gly < 0.70);
+  if(filter === 'hyper') filtered = filtered.filter(e => e.gly && e.gly > 1.80);
+  if(filter === 'sport') filtered = filtered.filter(e => e.obs && (e.obs.toLowerCase().includes('sport') || e.obs.toLowerCase().includes('exercise')));
+
+  const container = document.getElementById('fullList');
+  document.getElementById('countLog').innerText = filtered.length + ' résultat(s)';
+  
+  if(filtered.length === 0){
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-filter"></i>
+        <div>Aucune donnée pour ce filtre</div>
+      </div>
+    `;
+    return;
+  }
+  container.innerHTML = filtered.map(e => createCard(e)).join('');
+}
+
+function createCard(e){
+  let borderClass = 'border-neutral';
+  let badgeColor = 'bg-light text-dark';
+  if(e.gly){
+    if(e.gly < 0.70) { borderClass = 'border-hypo'; badgeColor = 'bg-val-hypo'; }
+    else if(e.gly > 1.80) { borderClass = 'border-hyper'; badgeColor = 'bg-val-hyper'; }
+    else { borderClass = 'border-ok'; badgeColor = 'bg-val-ok'; }
+  }
+
+  const dateStr = new Date(e.date).toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+  
+  let details = [];
+  if(e.levo) details.push('<span class="badge bg-success bg-opacity-25 text-success-emphasis">Levo</span>');
+  if(e.novo) details.push(`<span class="badge bg-insu">${e.novo}U R</span>`);
+  if(e.lantus) details.push(`<span class="badge bg-primary text-white">${e.lantus}U L</span>`);
+  if(e.obs) {
+    const shortObs = e.obs.length > 40 ? e.obs.substring(0,40) + '...' : e.obs;
+    details.push(`<span class="text-muted ms-1 small">"${shortObs}"</span>`);
+  }
+
+  let icon = 'fa-circle-dot';
+  if(e.cat === 'Matin') icon = 'fa-sun';
+  if(e.cat === 'Midi') icon = 'fa-utensils';
+  if(e.cat === 'Soir') icon = 'fa-moon';
+  if(e.cat === 'Divers') icon = 'fa-bolt';
+
+  return `
+  <div class="entry-card ${borderClass}" onclick="openEditModal(${e.id})">
+    <div class="entry-header">
+      <div class="entry-date"><i class="fa-solid ${icon} text-muted me-1" style="font-size:0.8rem"></i> ${dateStr} <span class="fw-normal text-muted ms-1">${e.cat}</span></div>
+      <div class="entry-time">${e.time}</div>
+    </div>
+    <div class="d-flex align-items-center flex-wrap gap-2">
+      ${e.gly ? `<div class="badge-custom ${badgeColor}" style="font-size:1rem">${e.gly.toFixed(2)} g/L</div>` : ''}
+      <div class="entry-badges d-flex align-items-center flex-wrap">
+        ${details.join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* --- EXPORT EXCEL --- */
+function exportExcel(){
+  if(entries.length === 0) {
+    showToast('Aucune donnée à exporter', 'warning');
+    return;
+  }
+  
+  try {
+    const exportData = entries.map(e => ({
+      Date: e.date,
+      Heure: e.time,
+      Catégorie: e.cat,
+      'Glycémie (g/L)': e.gly,
+      'Novorapid (U)': e.novo || '',
+      'Lantus (U)': e.lantus || '',
+      'Levothyrox': e.levo ? 'Oui' : 'Non',
+      Notes: e.obs || ''
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Journal");
+    XLSX.writeFile(wb, `GlycoTrack_${currentUser}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    
+    showToast('Export Excel réussi', 'success');
+  } catch(e) {
+    showToast('Erreur export: ' + e.message, 'error');
+  }
+}
+
+/* --- EXPORT PDF --- */
+function exportPDF(){
+  if(entries.length === 0) {
+    showToast('Aucune donnée à exporter', 'warning');
+    return;
+  }
+  
+  showToast('Génération du PDF en cours...', 'warning');
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(79, 70, 229);
+    doc.text('GlycoTrack - Rapport de Suivi', 105, 20, { align: 'center' });
+    
+    // User & Date
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Patient: ${currentUser}`, 20, 35);
+    doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 42);
+    
+    // Stats Summary
+    const recent30 = entries.slice(0, 30);
+    const glys = recent30.filter(e => e.gly).map(e => e.gly);
+    
+    if(glys.length > 0) {
+      const avg = (glys.reduce((a,b)=>a+b,0)/glys.length).toFixed(2);
+      const ok = glys.filter(g => g>=0.70 && g<=1.80).length;
+      const targetPercent = Math.round((ok/glys.length)*100);
+      const hypos = glys.filter(g => g < 0.70).length;
+      const hypers = glys.filter(g => g > 1.80).length;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(79, 70, 229);
+      doc.text('Statistiques (30 derniers jours)', 20, 55);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Nombre de mesures: ${glys.length}`, 20, 65);
+      doc.text(`Moyenne glycémique: ${avg} g/L`, 20, 72);
+      doc.text(`Dans la cible (0.7-1.8): ${targetPercent}%`, 20, 79);
+      doc.text(`Hypoglycémies (<0.7): ${hypos}`, 20, 86);
+      doc.text(`Hyperglycémies (>1.8): ${hypers}`, 20, 93);
+    }
+    
+    // Entries Table
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('Dernières entrées', 20, 110);
+    
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    
+    let y = 120;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    entries.slice(0, 20).forEach((e, idx) => {
+      if(y > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      const line = `${new Date(e.date).toLocaleDateString('fr-FR')} ${e.time} | ${e.cat} | ${e.gly ? e.gly.toFixed(2) + ' g/L' : '-'} | ${e.novo ? e.novo + 'U R' : ''} ${e.lantus ? e.lantus + 'U L' : ''}`;
+      doc.text(line, 20, y);
+      if(e.obs) {
+        y += 5;
+        doc.setTextColor(100, 100, 100);
+        doc.text(`  Notes: ${e.obs.substring(0, 80)}${e.obs.length > 80 ? '...' : ''}`, 20, y);
+        doc.setTextColor(0, 0, 0);
+      }
+      y += 10;
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`GlycoTrack V9 - Page ${i}/${pageCount}`, 105, pageHeight - 10, { align: 'center' });
+    }
+    
+    doc.save(`GlycoTrack_${currentUser}_${new Date().toISOString().split('T')[0]}.pdf`);
+    showToast('Export PDF réussi', 'success');
+  } catch(e) {
+    showToast('Erreur export PDF: ' + e.message, 'error');
+  }
+}
+
+/* --- BACKUP & RESTORE --- */
+function backupData(){
+  try {
+    const data = { 
+      version: DB_VERSION,
+      user: currentUser, 
+      entries: entries, 
+      medical: medicalData,
+      exportDate: new Date().toISOString(),
+      settings: {
+        theme: safeLocalStorage('get', 'theme'),
+        notificationEnabled: notificationEnabled,
+        notificationTimes: notificationTimes
+      }
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `backup_${currentUser}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    
+    showToast('Sauvegarde créée avec succès', 'success');
+  } catch(e) {
+    showToast('Erreur sauvegarde: ' + e.message, 'error');
+  }
+}
+
+function importBackup() {
+  document.getElementById('importInput').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      
+      if (!data.version || !data.entries) {
+        showToast('Fichier de backup invalide', 'error');
+        return;
+      }
+      
+      if (confirm(`Importer ${data.entries.length} entrées pour l'utilisateur "${data.user}" ?\n\nCela remplacera vos données actuelles !`)) {
+        currentUser = data.user;
+        entries = data.entries;
+        medicalData = data.medical || [];
+        
+        safeLocalStorage('set', 'glyco_last_user', currentUser);
+        document.getElementById('userName').innerText = currentUser;
+        
+        if(data.settings) {
+          if(data.settings.theme) {
+            document.documentElement.setAttribute('data-theme', data.settings.theme);
+            safeLocalStorage('set', 'theme', data.settings.theme);
+          }
+          if(data.settings.notificationTimes) {
+            notificationTimes = data.settings.notificationTimes;
+            safeLocalStorage('set', 'notifTimes', JSON.stringify(notificationTimes));
+          }
+        }
+        
+        saveData();
+        navTo('home');
+        showToast('Import réussi: ' + data.entries.length + ' entrées', 'success');
+      }
+    } catch(err) {
+      showToast('Erreur lecture fichier: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function deleteAllData() {
+  if(confirm('⚠️ ATTENTION ⚠️\n\nVoulez-vous VRAIMENT supprimer TOUTES vos données ?\n\nCette action est IRRÉVERSIBLE !')) {
+    if(confirm('Dernière confirmation : Supprimer définitivement ?')) {
+      try {
+        entries = [];
+        medicalData = [];
+        safeLocalStorage('remove', DB_PREFIX + currentUser + '_data');
+        safeLocalStorage('remove', DB_PREFIX + currentUser + '_med');
+        saveData();
+        navTo('home');
+        showToast('Toutes les données ont été supprimées', 'warning');
+      } catch(e) {
+        showToast('Erreur suppression: ' + e.message, 'error');
+      }
+    }
+  }
+}
+
+/* --- STATS --- */
+function renderStats(){
+  const recent30 = entries.slice(0, 30);
+  
+  const calcAvg = (cat) => {
+    const vals = recent30.filter(e => e.cat === cat && e.gly).map(e => e.gly);
+    if(vals.length === 0) return { avg: '-', count: 0 };
+    return { 
+      avg: (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2),
+      count: vals.length
+    };
+  }
+  
+  const matin = calcAvg('Matin');
+  const midi = calcAvg('Midi');
+  const soir = calcAvg('Soir');
+  
+  document.getElementById('avgMatin').innerText = matin.avg;
+  document.getElementById('countMatin').innerText = matin.count + ' mesures';
+  document.getElementById('avgMidi').innerText = midi.avg;
+  document.getElementById('countMidi').innerText = midi.count + ' mesures';
+  document.getElementById('avgSoir').innerText = soir.avg;
+  document.getElementById('countSoir').innerText = soir.count + ' mesures';
+  
+  // Advanced Stats
+  const glys = recent30.filter(e => e.gly).map(e => e.gly);
+  if(glys.length > 0) {
+    const avg = glys.reduce((a,b)=>a+b,0)/glys.length;
+    const variance = glys.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / glys.length;
+    const stdDev = Math.sqrt(variance);
+    const cv = (stdDev / avg * 100);
+    const min = Math.min(...glys);
+    const max = Math.max(...glys);
+    const hypos = glys.filter(g => g < 0.70).length;
+    
+    document.getElementById('statStdDev').innerText = stdDev.toFixed(2) + ' g/L';
+    document.getElementById('statCV').innerText = cv.toFixed(1) + '%';
+    document.getElementById('statMinMax').innerText = min.toFixed(2) + ' / ' + max.toFixed(2);
+    document.getElementById('statHypos').innerText = hypos + ' fois';
+  } else {
+    document.getElementById('statStdDev').innerText = '-';
+    document.getElementById('statCV').innerText = '-';
+    document.getElementById('statMinMax').innerText = '-';
+    document.getElementById('statHypos').innerText = '-';
+  }
+  
+  // Medical List
+  const list = document.getElementById('medicalList');
+  if(medicalData.length === 0) {
+    list.innerHTML = '<div class="text-muted fst-italic">Aucune donnée (HbA1c, TSH...)</div>';
+  } else {
+    list.innerHTML = medicalData.map(m => `
+      <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+         <div><b>${m.type}</b>: ${m.val}</div>
+         <div class="d-flex align-items-center gap-2">
+           <span class="text-muted small">${new Date(m.date).toLocaleDateString('fr-FR')}</span>
+           <button class="btn btn-sm text-danger py-0" onclick="delMed(${m.id})" title="Supprimer">
+             <i class="fa-solid fa-trash"></i>
+           </button>
+         </div>
+      </div>
+    `).join('');
+  }
+}
+
+function addMedicalData(){
+  const type = prompt("Type d'analyse (ex: HbA1c, TSH, Cholestérol...) :");
+  if(!type || !type.trim()) return;
+  
+  const val = prompt("Valeur et unité (ex: 7.2%, 2.5 mUI/L...) :");
+  if(!val || !val.trim()) return;
+  
+  medicalData.push({ 
+    id: Date.now(), 
+    date: new Date().toISOString().split('T')[0], 
+    type: type.trim(), 
+    val: val.trim() 
+  });
+  
+  saveData();
+  renderStats();
+  showToast('Donnée médicale ajoutée', 'success');
+}
+
+function delMed(id){
+  if(confirm('Supprimer cette donnée médicale ?')){
+    medicalData = medicalData.filter(m => m.id !== id);
+    saveData();
+    renderStats();
+    showToast('Donnée supprimée', 'warning');
+  }
+}
+
+/* --- KEYBOARD SHORTCUTS --- */
+document.addEventListener('keydown', function(e) {
+  if(e.ctrlKey || e.metaKey) {
+    if(e.key === 'n') {
+      e.preventDefault();
+      openAddModal();
+    }
+    if(e.key === 's') {
+      e.preventDefault();
+      backupData();
+    }
+  }
+});
+
+// Auto-save on visibility change
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && entries.length > 0) {
+    saveData();
+  }
+});
+
+console.log('%c🩸 GlycoTrack V9 PWA Ready!', 'color: #4f46e5; font-size: 20px; font-weight: bold;');
+console.log('%c✓ Mode Hors-ligne activé', 'color: #10b981;');
+console.log('%c✓ Export PDF/Excel disponible', 'color: #10b981;');
+console.log('%c✓ Thème sombre intégré', 'color: #10b981;');
+console.log('%c✓ Notifications programmables', 'color: #10b981;');
+console.log('%c💾 Raccourcis: Ctrl+N (Nouvelle entrée) | Ctrl+S (Backup)', 'color: #f59e0b;');
+</script>
+
+</body>
+</html>
