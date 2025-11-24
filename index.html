@@ -50,6 +50,13 @@
     transition: background-color 0.3s, color 0.3s;
   }
 
+  #chartHome { 
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0; 
+    width: 100% !important; 
+    height: 100% !important; 
+  }
+
   .top-header {
     background: var(--surface);
     padding: 15px 20px;
@@ -287,8 +294,10 @@
 <div id="view-home" class="view-section active">
   
   <div class="summary-card">
-    <div class="card-title-sm">Tendance (7 derniers jours)</div>
-    <canvas id="chartHome" height="180"></canvas>
+    <div class="card-title-sm mb-3">Tendance (7 derniers jours)</div>
+    <div style="position:relative; height:220px;">
+      <canvas id="chartHome"></canvas>
+    </div>
   </div>
 
   <div class="row g-3 mb-4">
