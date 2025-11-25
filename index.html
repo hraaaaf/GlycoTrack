@@ -55,7 +55,7 @@
     top: 0; left: 0; right: 0; bottom: 0; 
     width: 100% !important; 
     height: 100% !important; 
-  }
+    DELEYT}
 
   .top-header {
     background: var(--surface);
@@ -1036,17 +1036,93 @@ function selectUser(user) {
 
 function deleteUser(user) {
   if (user === currentUser) {
-    alert("Vous ne pouvez pas supprimer l'utilisateur actuellement sélectionné !");
+    alert("Impossible de supprimer l’utilisateur actif. Sélectionne un autre utilisateur d’abord.");
     return;
   }
 
-  if (confirm(`Supprimer définitivement l'utilisateur "${user}" et toutes ses données ?`)) {
-    safeLocalStorage('remove', DB_PREFIX + user + '_data');
-    safeLocalStorage('remove', DB_PREFIX + user + '_med');
-    showToast('Utilisateur supprimé : ' + user, 'warning');
-    showUserManager(); // Rafraîchir la liste
+  if (!users[user]) return;
+
+  delete users[user];
+  saveUsers();
+  renderUserList();
+  updateUIForUser();
+}
+
+
+
+
+function safeLocalStorage(action, key, value = null) {
+  try {
+    if (action === "get") return localStorage.getItem(key);
+    if (action === "set") localStorage.setItem(key, value);
+    if (action === "remove") localStorage.removeItem(key);
+  } catch (e) {
+    console.warn("LocalStorage bloqué :", e);
+    return null;
   }
 }
+
+function renderUserList() {
+  const container = document.getElementById("userList");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  Object.keys(users).forEach(user => {
+    const div = document.createElement("div");
+    div.className = "user-item d-flex justify-content-between align-items-center p-2 border rounded mb-2";
+
+    div.innerHTML = `
+      <span onclick="selectUser('${user}')"
+            style="cursor:pointer;font-weight:${user === currentUser ? 'bold' : 'normal'}">
+        ${user}
+      </span>
+
+      ${user !== currentUser ? 
+        `<button class="btn btn-sm btn-danger" onclick="deleteUser('${user}')">Supprimer</button>` 
+        : `<span class="text-muted">(actif)</span>`}
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+
+function updateUIForUser() {
+  document.getElementById("currentUserName").textContent = currentUser || "Aucun utilisateur";
+  renderEntries();
+  updateDashboard();
+  updateStats();
+}
+
+
+function createServiceWorkerBlob() {
+  const swCode = `
+    self.addEventListener('install', event => {
+      self.skipWaiting();
+    });
+
+    self.addEventListener('fetch', event => {
+      event.respondWith(
+        fetch(event.request).catch(() => caches.match(event.request))
+      );
+    });
+  `;
+
+  const blob = new Blob([swCode], { type: "text/javascript" });
+  return URL.createObjectURL(blob);
+}
+
+function applyTheme() {
+  const theme = safeLocalStorage("get", "theme") || "light";
+
+  if (theme === "dark") {
+    document.body.classList.add("dark-theme");
+  } else {
+    document.body.classList.remove("dark-theme");
+  }
+}
+
 
 function validateForm() {
   let isValid = true;
