@@ -427,6 +427,31 @@
   </div>
 
   <div class="settings-section">
+    <div class="card-title-sm">PERSONNALISATION MÉDICAMENTS</div>
+    
+    <div class="settings-item d-block border-0 pb-0">
+      <label class="fw-bold mb-1 small text-muted">Cachet du Matin (ex: Levothyrox)</label>
+      <input type="text" id="confNameMatin" class="form-control-custom" placeholder="Nom du cachet">
+    </div>
+
+    <div class="settings-item d-block border-0 pb-0">
+      <label class="fw-bold mb-1 small text-muted">Insuline Rapide (ex: Novorapid)</label>
+      <input type="text" id="confNameRapid" class="form-control-custom" placeholder="Insuline repas">
+    </div>
+
+    <div class="settings-item d-block border-0">
+      <label class="fw-bold mb-1 small text-muted">Insuline Lente (ex: Lantus)</label>
+      <input type="text" id="confNameSlow" class="form-control-custom" placeholder="Insuline basale">
+    </div>
+
+    <div class="d-grid mt-2">
+      <button class="btn btn-primary fw-bold" onclick="saveMedNames()">
+        <i class="fa-solid fa-save me-2"></i> Enregistrer les noms
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-section">
     <div class="card-title-sm">NOTIFICATIONS</div>
     <div class="settings-item">
       <div>
@@ -481,7 +506,7 @@
   <div class="settings-section">
     <div class="card-title-sm">À PROPOS</div>
     <div class="small text-muted">
-      <div class="mb-2"><strong>Version:</strong> 9.0.0 PWA</div>
+      <div class="mb-2"><strong>Version:</strong> 9.1.0 Custom</div>
       <div class="mb-2"><strong>Développeur:</strong> GlycoTrack Team</div>
       <div class="mb-2"><strong>Licence:</strong> Gratuit 100%</div>
       <div class="mb-2"><strong>Stockage:</strong> LocalStorage (Hors-ligne)</div>
@@ -686,6 +711,50 @@ function initPWA() {
       .catch(err => console.log('SW error:', err));
   }
 }
+
+// A mettre dans votre balise <script>
+
+// 1. La configuration par défaut
+let medConfig = {
+  matin: 'Levothyrox',
+  rapid: 'Novorapid',
+  slow: 'Lantus'
+};
+
+// 2. Fonction pour sauvegarder les noms
+function saveMedNames() {
+  medConfig.matin = document.getElementById('confNameMatin').value.trim() || 'Levothyrox';
+  medConfig.rapid = document.getElementById('confNameRapid').value.trim() || 'Novorapid';
+  medConfig.slow = document.getElementById('confNameSlow').value.trim() || 'Lantus';
+  
+  safeLocalStorage('set', 'med_config', JSON.stringify(medConfig));
+  
+  // Met à jour l'interface immédiatement
+  applyMedLabels();
+  renderLog(currentFilter);
+  
+  showToast('Noms des médicaments enregistrés !', 'success');
+}
+
+// 3. Fonction pour charger les noms au démarrage
+function loadMedConfig() {
+  const saved = safeLocalStorage('get', 'med_config');
+  if(saved) {
+    medConfig = JSON.parse(saved);
+  }
+  // Remplit les champs dans les paramètres
+  const elMatin = document.getElementById('confNameMatin');
+  const elRapid = document.getElementById('confNameRapid');
+  const elSlow = document.getElementById('confNameSlow');
+  
+  if(elMatin) elMatin.value = medConfig.matin;
+  if(elRapid) elRapid.value = medConfig.rapid;
+  if(elSlow) elSlow.value = medConfig.slow;
+  
+  applyMedLabels();
+}
+
+// N'oublie pas d'appeler loadMedConfig() dans window.onload !
 
 function createServiceWorkerBlob() {
   const swCode = `
@@ -1473,6 +1542,13 @@ function exportExcel(){
     }));
     
     const ws = XLSX.utils.json_to_sheet(exportData);
+    const exportData = entries.map(e => ({
+      // ...
+      [medConfig.rapid + ' (U)']: e.novo || '', // Utilise les crochets pour nom dynamique
+      [medConfig.slow + ' (U)']: e.lantus || '',
+      [medConfig.matin]: e.levo ? 'Oui' : 'Non',
+      // ...
+    }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Journal");
     XLSX.writeFile(wb, `GlycoTrack_${currentUser}_${new Date().toISOString().split('T')[0]}.xlsx`);
