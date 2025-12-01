@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>GlycoTrack V11 Intégrale</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+  :root {
+    --primary: #4f46e5;
+    --bg-app: #f1f5f9;
+    --surface: #ffffff;
+    --nav-height: 70px;
+    --safe-bottom: env(safe-area-inset-bottom);
+    
+    --hypo-color: #ef4444;
+    --hyper-color: #f59e0b;
+    --ok-color: #10b981;
+    --radius: 16px;
+  }
+
+  body {
+    background-color: var(--bg-app);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1e293b;
+    padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* --- LAYOUT PC CENTRÉ --- */
+  @media (min-width: 768px) {
+    body { background: #e2e8f0; }
+    .app-wrapper {
+      max-width: 500px; margin: 0 auto; background: var(--bg-app);
+      min-height: 100vh; box-shadow: 0 0 30px rgba(0,0,0,0.1); position: relative;
+    }
+    .bottom-nav { max-width: 500px; margin: 0 auto; left: 0; right: 0; }
+  }
+
+  /* --- HEADER --- */
+  .top-header {
+    background: var(--primary); color: white;
+    padding: 15px 20px; padding-top: max(15px, env(safe-area-inset-top));
+    position: sticky; top: 0; z-index: 1000;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
+  }
+  .app-title { font-weight: 800; font-size: 1.1rem; letter-spacing: 0.5px; }
+  .user-btn {
+    background: rgba(255,255,255,0.2); border: none; color: white;
+    padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .user-btn:active { background: rgba(255,255,255,0.4); }
+
+  /* --- NAV BAR --- */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    height: calc(var(--nav-height) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    display: flex; justify-content: space-around; align-items: center;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+    z-index: 900; transition: transform 0.3s ease;
+  }
+  .nav-hidden { transform: translateY(100%); }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: none; border: none; color: #94a3b8;
+    font-size: 0.7rem; font-weight: 600; height: 100%;
+  }
+  .nav-item i { font-size: 1.4rem; margin-bottom: 4px; transition: transform 0.2s; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item.active i { transform: translateY(-2px); }
+
+  .fab-add {
+    position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white; border: 4px solid var(--bg-app);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; box-shadow: 0 8px 15px rgba(79, 70, 229, 0.4); cursor: pointer;
+  }
+  .fab-add:active { transform: translateX(-50%) scale(0.95); }
+
+  /* --- SECTIONS --- */
+  .view-section { display: none; padding: 20px; animation: fadeIn 0.3s ease-out; }
+  .view-section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: 0; } }
+
+  .card-custom {
+    background: white; border-radius: var(--radius); padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03); margin-bottom: 16px;
+    border: 1px solid rgba(0,0,0,0.02);
+  }
+
+  /* --- FILTRES --- */
+  .filter-scroll {
+    display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none;
+  }
+  .filter-chip {
+    white-space: nowrap; padding: 8px 16px; border-radius: 30px;
+    background: white; border: 1px solid #e2e8f0; color: #64748b;
+    font-size: 0.85rem; font-weight: 600; transition: all 0.2s; cursor: pointer;
+  }
+  .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  /* --- CARTE JOUR CONSOLIDÉE (Le "1 Ligne = 1 Jour") --- */
+  .day-card {
+    background: white; border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e2e8f0;
+  }
+  .day-header {
+    background: #f8fafc; padding: 10px 15px; border-bottom: 1px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 700; color: #334155;
+  }
+  .day-row {
+    display: flex; align-items: center; padding: 12px 15px;
+    border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s;
+  }
+  .day-row:last-child { border-bottom: none; }
+  .day-row:active { background: #f8fafc; }
+
+  .row-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 12px; font-size: 1.1rem; flex-shrink: 0;
+  }
+  .icon-matin { background: #ecfdf5; color: #10b981; }
+  .icon-midi { background: #fffbeb; color: #f59e0b; }
+  .icon-soir { background: #eef2ff; color: #4f46e5; }
+  .icon-divers { background: #fdf2f8; color: #db2777; }
+
+  .row-content { flex: 1; display: flex; flex-direction: column; }
+  .row-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+  .row-val { font-weight: 700; font-size: 1rem; }
+  .row-details { font-size: 0.8rem; color: #64748b; }
+
+  .val-hypo { color: var(--hypo-color); }
+  .val-hyper { color: var(--hyper-color); }
+  .val-ok { color: var(--ok-color); }
+
+  /* --- TOASTS --- */
+  .toast-container { position: fixed; top: 80px; right: 20px; z-index: 2000; }
+  .custom-toast {
+    background: white; border-radius: 12px; padding: 16px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px;
+    margin-bottom: 10px; animation: slideIn 0.3s ease-out; min-width: 280px;
+  }
+  @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .toast-success { border-left: 4px solid var(--ok-color); }
+  .toast-error { border-left: 4px solid var(--hypo-color); }
+  .toast-warning { border-left: 4px solid var(--hyper-color); }
+
+  /* --- MODALS & FORMULAIRES (Optimisé Mobile V8) --- */
+  input, select, textarea { font-size: 16px !important; } /* Anti-Zoom iOS */
+  .form-control-lg { background: #f1f5f9; border: none; border-radius: 12px; padding: 15px; }
+  .form-control-lg:focus { background: white; box-shadow: 0 0 0 2px var(--primary); }
+  .form-control-lg.is-invalid { box-shadow: 0 0 0 2px var(--hypo-color); }
+  
+  .validation-error { color: var(--hypo-color); font-size: 0.75rem; margin-top: 4px; display: none; }
+  .validation-error.show { display: block; }
+
+  .cat-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .cat-item {
+    background: #f1f5f9; border-radius: 12px; padding: 10px 5px;
+    text-align: center; font-size: 0.75rem; font-weight: 700; color: #64748b;
+    border: 2px solid transparent; cursor: pointer;
+  }
+  .cat-item.active { background: #e0e7ff; color: var(--primary); border-color: var(--primary); }
+  .cat-item i { display: block; font-size: 1.2rem; margin-bottom: 4px; }
+
+  .menu-list-btn {
+    width: 100%; text-align: left; padding: 15px; border: none; background: none;
+    border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #334155;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .menu-list-btn:active { background: #f8fafc; }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-wrapper">
+
+  <div class="top-header">
+    <div class="app-title"><i class="fa-solid fa-heart-pulse me-2"></i>GlycoTrack</div>
+    <button class="user-btn" onclick="openUserModal()">
+      <i class="fa-solid fa-user-shield"></i> <span id="userName">Brahim</span>
+    </button>
+  </div>
+
+  <div id="view-home" class="content-area view-section active">
+    <div class="card-custom p-3">
+      <h6 class="text-uppercase text-muted fw-bold small mb-3">Tendance (7j)</h6>
+      <div style="height: 180px;"><canvas id="chartHome"></canvas></div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-6">
+        <div class="card-custom text-center p-3 h-100">
+          <div class="display-5 fw-bold text-primary" id="dashAvg">-</div>
+          <div class="small text-muted fw-bold">MOYENNE</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card-custom text-center p-3 h-100">
+          <div class="display-5 fw-bold text-success" id="dashTarget">-</div>
+          <div class="small text-muted fw-bold">% CIBLE</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-outline-primary w-100 py-2 fw-bold" onclick="navTo('log')">
+      Voir tout l'historique <i class="fa-solid fa-arrow-right ms-2"></i>
+    </button>
+  </div>
+
+  <div id="view-log" class="content-area view-section">
+    
+    <div class="d-flex gap-2 overflow-auto pb-3 mb-1" style="scrollbar-width:none;">
+      <button class="filter-chip active" onclick="setFilter(this, 'all')">Tout</button>
+      <button class="filter-chip" onclick="setFilter(this, 'hypo')">🚨 Hypos</button>
+      <button class="filter-chip" onclick="setFilter(this, 'hyper')">⚠️ Hypers</button>
+      <button class="filter-chip" onclick="setFilter(this, 'matin')">Matins</button>
+      <button class="filter-chip" onclick="setFilter(this, 'sport')">⚽ Sport</button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-bold m-0 text-secondary" id="logCount">Chargement...</h6>
+      <button class="btn btn-sm btn-success fw-bold" onclick="openExportModal()">
+        <i class="fa-solid fa-file-excel me-1"></i> Excel
+      </button>
+    </div>
+
+    <div id="fullList" style="padding-bottom: 60px;"></div>
+  </div>
+
+  <div id="view-stats" class="content-area view-section">
+    <h5 class="fw-bold mb-3">Moyennes par Repas</h5>
+    <div class="card-custom mb-3">
+      <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+        <span class="text-success fw-bold">MATIN</span><span class="h5 mb-0" id="avgMatin">-</span>
+      </div>
+      <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+        <span class="text-warning fw-bold">MIDI</span><span class="h5 mb-0" id="avgMidi">-</span>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-primary fw-bold">SOIR</span><span class="h5 mb-0" id="avgSoir">-</span>
+      </div>
+    </div>
+
+    <div class="card-custom">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+         <h6 class="fw-bold m-0">Dossier Médical</h6>
+         <button class="btn btn-sm btn-outline-primary" onclick="addMedicalData()">+ Ajouter</button>
+      </div>
+      <div id="medicalList" class="small text-muted">Aucune donnée</div>
+    </div>
+    
+    <div class="text-center mt-4">
+      <button class="btn btn-link text-muted text-decoration-none" onclick="backupData()">
+        <i class="fa-solid fa-cloud-arrow-down"></i> Sauvegarder JSON
+      </button>
+    </div>
+  </div>
+
+  <div class="bottom-nav" id="mainNav">
+    <button class="nav-item active" onclick="navTo('home', this)"><i class="fa-solid fa-house"></i><span>Accueil</span></button>
+    <button class="nav-item" onclick="navTo('log', this)"><i class="fa-solid fa-list-ul"></i><span>Journal</span></button>
+    <div style="width: 60px;"></div>
+    <button class="nav-item" onclick="navTo('stats', this)"><i class="fa-solid fa-chart-pie"></i><span>Stats</span></button>
+    <button class="nav-item" onclick="window.location.reload()"><i class="fa-solid fa-rotate"></i><span>Sync</span></button>
+    <div class="fab-add" onclick="openAddModal()"><i class="fa-solid fa-plus"></i></div>
+  </div>
+
+</div>
+
+<div class="modal fade" id="entryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content bg-light">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalTitle">Nouvelle saisie</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        
+        <div class="cat-selector">
+          <div class="cat-item active" onclick="setCat('Matin')" id="btnCatMatin"><i class="fa-regular fa-sun"></i> Matin</div>
+          <div class="cat-item" onclick="setCat('Midi')" id="btnCatMidi"><i class="fa-solid fa-utensils"></i> Midi</div>
+          <div class="cat-item" onclick="setCat('Soir')" id="btnCatSoir"><i class="fa-solid fa-moon"></i> Soir</div>
+          <div class="cat-item" onclick="setCat('Divers')" id="btnCatDivers"><i class="fa-solid fa-bolt"></i> Autre</div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-7">
+            <input type="date" id="inDate" class="form-control form-control-lg bg-white border-0">
+            <div class="validation-error" id="errDate">Date requise</div>
+          </div>
+          <div class="col-5"><input type="time" id="inTime" class="form-control form-control-lg bg-white border-0"></div>
+        </div>
+
+        <div class="card-custom p-3 border-0 shadow-sm">
+          <div id="secMatin" class="dyn-sec">
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" id="inLevo" checked style="transform: scale(1.3);">
+              <label class="form-check-label fw-bold ms-2 pt-1">Levothyrox pris ?</label>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="small text-muted fw-bold mb-1">GLYCÉMIE (g/L)</label>
+            <div class="input-group">
+              <input type="number" step="0.01" id="inGly" class="form-control form-control-lg" placeholder="0.00">
+              <span class="input-group-text border-0 bg-white text-muted fw-bold">g/L</span>
+            </div>
+            <div class="validation-error" id="errGly">Valeur requise (0.2 - 6.0)</div>
+          </div>
+
+          <div id="secInsuline" class="dyn-sec d-none">
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="small text-muted fw-bold mb-1 text-danger">NOVORAPID</label>
+                <input type="number" id="inNovo" class="form-control form-control-lg" placeholder="U">
+              </div>
+              <div class="col-6" id="colLantus">
+                <label class="small text-muted fw-bold mb-1 text-primary">LANTUS</label>
+                <input type="number" id="inLantus" class="form-control form-control-lg" placeholder="U">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="small text-muted fw-bold mb-1">NOTES</label>
+            <textarea id="inObs" class="form-control form-control-lg" rows="2" placeholder="Détails..."></textarea>
+          </div>
+        </div>
+        
+        <div id="deleteBtnArea" class="text-center mt-3 d-none">
+          <button class="btn btn-outline-danger border-0" onclick="deleteEntry()">Supprimer</button>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button class="btn btn-primary w-100 py-3 rounded-4 fw-bold fs-5 shadow" onclick="saveEntry()">ENREGISTRER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="userModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h5 class="modal-title fw-bold">Gestion Profil</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body p-0">
+        <div class="bg-light p-4 text-center mb-3">
+          <div class="display-6 text-primary"><i class="fa-solid fa-user-shield"></i></div>
+          <h4 class="fw-bold mt-2" id="modalUserName">Brahim</h4>
+          <div class="text-muted small">Profil Actif</div>
+        </div>
+        <div class="p-2">
+          <button class="menu-list-btn" onclick="createNewUser()"><span><i class="fa-solid fa-user-plus"></i> Créer nouveau</span><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="menu-list-btn" onclick="switchUserPrompt()"><span><i class="fa-solid fa-users"></i> Changer</span><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="menu-list-btn text-warning" onclick="renameCurrentUser()"><span><i class="fa-solid fa-pen"></i> Renommer</span><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="exportModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0"><h5 class="modal-title fw-bold">Export Excel</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Le fichier générera une ligne par jour avec toutes les données.</p>
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-primary fw-bold py-2" onclick="processExport('all')">Tout l'historique</button>
+          <button class="btn btn-outline-secondary py-2" onclick="processExport(30)">30 derniers jours</button>
+          <button class="btn btn-outline-secondary py-2" onclick="processExport(7)">7 derniers jours</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/** * GLYCOTRACK V11 - CODE INTÉGRAL 
+ */
+const DB_PREFIX = 'glycotrack_v11_';
+let currentUser = 'Brahim';
+let entries = [];
+let medicalData = [];
+let entryModal, userModal, exportModal, chartRef;
+let currentCat = 'Matin';
+let currentFilter = 'all';
+
+window.onload = () => {
+  entryModal = new bootstrap.Modal(document.getElementById('entryModal'));
+  userModal = new bootstrap.Modal(document.getElementById('userModal'));
+  exportModal = new bootstrap.Modal(document.getElementById('exportModal'));
+  
+  const lastUser = localStorage.getItem('glyco_last_user');
+  if(lastUser) currentUser = lastUser;
+  updateUserDisplay();
+  loadData();
+  
+  // Gestion clavier mobile
+  const inputs = document.querySelectorAll('input, textarea');
+  const nav = document.getElementById('mainNav');
+  inputs.forEach(inp => {
+    inp.addEventListener('focus', () => nav.classList.add('nav-hidden'));
+    inp.addEventListener('blur', () => setTimeout(() => nav.classList.remove('nav-hidden'), 100));
+  });
+};
+
+function updateUserDisplay(){
+  document.getElementById('userName').innerText = currentUser;
+  document.getElementById('modalUserName').innerText = currentUser;
+}
+
+/* --- STOCKAGE SÉCURISÉ (SAFE LS) --- */
+function safeLS(act, key, val=null){
+  try {
+    if(act==='get') return localStorage.getItem(key);
+    if(act==='set') localStorage.setItem(key, val);
+    if(act==='rem') localStorage.removeItem(key);
+  } catch(e){ showToast('Erreur stockage (mémoire pleine ?)', 'error'); }
+}
+
+/* --- TOASTS --- */
+function showToast(msg, type='success'){
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `custom-toast toast-${type}`;
+  let icon = type==='success' ? 'check' : (type==='error' ? 'circle-xmark' : 'circle-exclamation');
+  t.innerHTML = `<i class="fa-solid fa-${icon} fa-lg"></i> <div>${msg}</div>`;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+/* --- DATA ENGINE --- */
+function loadData(){
+  entries = JSON.parse(safeLS('get', DB_PREFIX + currentUser + '_data') || '[]');
+  medicalData = JSON.parse(safeLS('get', DB_PREFIX + currentUser + '_med') || '[]');
+  entries.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+  
+  renderHome();
+  renderLog();
+  renderStats();
+}
+
+function saveData(){
+  entries.sort((a,b) => new Date(b.date+'T'+b.time) - new Date(a.date+'T'+a.time));
+  safeLS('set', DB_PREFIX + currentUser + '_data', JSON.stringify(entries));
+  safeLS('set', DB_PREFIX + currentUser + '_med', JSON.stringify(medicalData));
+  renderHome(); renderLog(); renderStats();
+}
+
+/* --- GESTION UTILISATEURS (SÉCURISÉE) --- */
+function openUserModal() { userModal.show(); }
+
+function createNewUser(){
+  if(!confirm("⚠️ Créer un nouveau profil vide ?")) return;
+  const name = prompt("Nom du profil :");
+  if(name && name.trim()){
+    if(safeLS('get', DB_PREFIX + name.trim() + '_data')){
+      return showToast('Ce profil existe déjà', 'error');
+    }
+    currentUser = name.trim();
+    safeLS('set', 'glyco_last_user', currentUser);
+    updateUserDisplay(); loadData(); userModal.hide();
+    showToast(`Bienvenue ${currentUser}`);
+  }
+}
+
+function switchUserPrompt(){
+  if(!confirm("⚠️ Changer de profil utilisateur ?")) return;
+  const name = prompt("Nom du profil à charger :", currentUser);
+  if(name && name.trim()){
+    currentUser = name.trim();
+    safeLS('set', 'glyco_last_user', currentUser);
+    updateUserDisplay(); loadData(); userModal.hide();
+    showToast(`Chargé : ${currentUser}`);
+  }
+}
+
+function renameCurrentUser(){
+  if(!confirm("⚠️ Renommer le profil actuel ?")) return;
+  const oldName = currentUser;
+  const newName = prompt("Nouveau nom :", oldName);
+  if(newName && newName.trim() && newName !== oldName){
+    if(safeLS('get', DB_PREFIX + newName + '_data')) return showToast('Nom déjà pris', 'error');
+    
+    const d = safeLS('get', DB_PREFIX + oldName + '_data');
+    const m = safeLS('get', DB_PREFIX + oldName + '_med');
+    safeLS('set', DB_PREFIX + newName + '_data', d);
+    safeLS('set', DB_PREFIX + newName + '_med', m);
+    safeLS('rem', DB_PREFIX + oldName + '_data');
+    safeLS('rem', DB_PREFIX + oldName + '_med');
+    
+    currentUser = newName;
+    safeLS('set', 'glyco_last_user', currentUser);
+    updateUserDisplay(); userModal.hide();
+    showToast('Profil renommé !');
+  }
+}
+
+/* --- EXPORT EXCEL (CONSOLIDÉ) --- */
+function openExportModal() { exportModal.show(); }
+
+function processExport(range){
+  if(entries.length === 0) return showToast('Aucune donnée', 'error');
+  
+  let list = [...entries];
+  if(range !== 'all'){
+    const d = new Date(); d.setDate(d.getDate() - parseInt(range)); d.setHours(0,0,0,0);
+    list = list.filter(e => new Date(e.date) >= d);
+  }
+  if(list.length === 0) return showToast('Période vide', 'warning');
+
+  const days = {};
+  list.forEach(e => {
+    if(!days[e.date]) days[e.date] = { date: e.date, matin:{}, midi:{}, soir:{}, divers:[] };
+    const d = days[e.date];
+    if(e.cat==='Matin') d.matin = e;
+    else if(e.cat==='Midi') d.midi = e;
+    else if(e.cat==='Soir') d.soir = e;
+    else d.divers.push(e);
+  });
+
+  const data = Object.values(days).sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
+    return {
+      Date: d.date,
+      'Levo': d.matin.levo?'Oui':'', 'Matin Gly':d.matin.gly,
+      'Midi H':d.midi.time, 'Midi Gly':d.midi.gly, 'Midi Novo':d.midi.novo, 'Midi Note':d.midi.obs,
+      'Soir H':d.soir.time, 'Soir Gly':d.soir.gly, 'Soir Novo':d.soir.novo, 'Soir Lantus':d.soir.lantus,
+      'Divers': d.divers.map(x => `[${x.sub}] ${x.gly||''} ${x.obs||''}`).join(' | ')
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Journal");
+  XLSX.writeFile(wb, `Glyco_${currentUser}_${range}.xlsx`);
+  exportModal.hide();
+  showToast('Fichier Excel généré !');
+}
+
+/* --- LOGIQUE SAISIE & VALIDATION (Restauré V8) --- */
+function openAddModal(){
+  resetForm(); document.getElementById('modalTitle').innerText='Nouvelle Saisie';
+  const n = new Date(); document.getElementById('inDate').value=n.toISOString().split('T')[0];
+  document.getElementById('inTime').value=n.toTimeString().slice(0,5);
+  setCat('Matin'); entryModal.show();
+}
+
+function editEntry(id){
+  const e = entries.find(x => x.id === id); if(!e) return;
+  resetForm(); document.getElementById('modalTitle').innerText='Modifier';
+  document.getElementById('editId').value = e.id;
+  document.getElementById('deleteBtnArea').classList.remove('d-none');
+  
+  document.getElementById('inDate').value = e.date;
+  document.getElementById('inTime').value = e.time;
+  document.getElementById('inGly').value = e.gly||'';
+  document.getElementById('inNovo').value = e.novo||'';
+  document.getElementById('inLantus').value = e.lantus||'';
+  document.getElementById('inObs').value = e.obs||'';
+  if(e.levo!==undefined) document.getElementById('inLevo').checked = e.levo;
+  setCat(e.cat); entryModal.show();
+}
+
+function resetForm(){
+  document.getElementById('editId').value='';
+  document.getElementById('deleteBtnArea').classList.add('d-none');
+  document.querySelectorAll('.validation-error').forEach(e=>e.classList.remove('show'));
+  document.querySelectorAll('.form-control-lg').forEach(e=>e.classList.remove('is-invalid'));
+  ['inGly','inNovo','inLantus','inObs'].forEach(i=>document.getElementById(i).value='');
+}
+
+function validateForm(){
+  let ok = true;
+  const d = document.getElementById('inDate');
+  if(!d.value) { d.classList.add('is-invalid'); document.getElementById('errDate').classList.add('show'); ok=false; }
+  
+  // Glycémie validation (Optionnelle pour Divers mais recommandée)
+  const g = document.getElementById('inGly');
+  const cat = currentCat;
+  // Matin obligatoire
+  if(cat === 'Matin' && (!g.value || parseFloat(g.value) < 0.1)){
+     g.classList.add('is-invalid'); document.getElementById('errGly').classList.add('show'); ok=false;
+  }
+  return ok;
+}
+
+function setCat(cat){
+  currentCat = cat;
+  document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnCat'+cat).classList.add('active');
+  document.getElementById('secMatin').classList.add('d-none');
+  document.getElementById('secInsuline').classList.add('d-none');
+  if(cat==='Matin') document.getElementById('secMatin').classList.remove('d-none');
+  if(cat==='Midi'||cat==='Soir') document.getElementById('secInsuline').classList.remove('d-none');
+  if(cat==='Soir') document.getElementById('colLantus').classList.remove('d-none');
+  else document.getElementById('colLantus').classList.add('d-none');
+}
+
+function saveEntry(){
+  if(!validateForm()) return showToast('Vérifiez les champs', 'error');
+  
+  const id = document.getElementById('editId').value;
+  const obj = {
+    id: id ? parseInt(id) : Date.now(),
+    date: document.getElementById('inDate').value,
+    time: document.getElementById('inTime').value,
+    cat: currentCat,
+    gly: parseFloat(document.getElementById('inGly').value)||null,
+    novo: parseFloat(document.getElementById('inNovo').value)||null,
+    lantus: parseFloat(document.getElementById('inLantus').value)||null,
+    obs: document.getElementById('inObs').value,
+    levo: currentCat==='Matin'?document.getElementById('inLevo').checked:null,
+    sub: currentCat==='Divers'?'Autre':null // Simplification
+  };
+
+  if(id){ const idx=entries.findIndex(e=>e.id==id); if(idx>=0) entries[idx]=obj; }
+  else entries.push(obj);
+  
+  saveData(); entryModal.hide(); showToast('Enregistré');
+}
+
+function deleteEntry(){
+  const id = document.getElementById('editId').value;
+  if(confirm('Supprimer ?')){
+    entries = entries.filter(e=>e.id!=id);
+    saveData(); entryModal.hide(); showToast('Supprimé', 'warning');
+  }
+}
+
+/* --- RENDER LOG (CONSOLIDÉ) --- */
+function setFilter(btn, f){
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); currentFilter = f; renderLog();
+}
+
+function renderLog(){
+  const daysMap = {};
+  // Groupe par date
+  entries.forEach(e => {
+    if(!daysMap[e.date]) daysMap[e.date] = {date:e.date, items:[]};
+    daysMap[e.date].items.push(e);
+  });
+  
+  let sortedDays = Object.values(daysMap).sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  // Filtrage global (Si filtre 'Hypo', on affiche les jours qui contiennent une hypo)
+  if(currentFilter !== 'all'){
+    sortedDays = sortedDays.filter(d => {
+      if(currentFilter === 'matin') return d.items.some(i=>i.cat==='Matin');
+      if(currentFilter === 'sport') return d.items.some(i=>i.cat==='Divers' || (i.obs&&i.obs.toLowerCase().includes('sport')));
+      const vals = d.items.map(i=>i.gly).filter(v=>v);
+      if(currentFilter === 'hypo') return vals.some(v=>v<0.70);
+      if(currentFilter === 'hyper') return vals.some(v=>v>1.80);
+      return false;
+    });
+  }
+  
+  const container = document.getElementById('fullList');
+  document.getElementById('logCount').innerText = sortedDays.length + ' jours affichés';
+  
+  if(sortedDays.length === 0) { container.innerHTML = '<div class="text-center text-muted py-5">Vide</div>'; return; }
+
+  container.innerHTML = sortedDays.map(d => {
+    const dateStr = new Date(d.date).toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long'});
+    
+    // Trie les items : Matin < Midi < Soir < Divers
+    const order = {'Matin':1, 'Midi':2, 'Soir':3, 'Divers':4};
+    d.items.sort((a,b) => (order[a.cat]||9) - (order[b.cat]||9));
+
+    const rows = d.items.map(e => {
+      let ico='fa-bolt', cls='icon-divers', valC='val-ok';
+      if(e.cat==='Matin') {ico='fa-sun'; cls='icon-matin';}
+      if(e.cat==='Midi') {ico='fa-utensils'; cls='icon-midi';}
+      if(e.cat==='Soir') {ico='fa-moon'; cls='icon-soir';}
+      
+      if(e.gly<0.70) valC='val-hypo'; else if(e.gly>1.80) valC='val-hyper';
+      
+      let info = [];
+      if(e.levo) info.push('<span class="text-success fw-bold">Levo</span>');
+      if(e.novo) info.push(`${e.novo}N`);
+      if(e.lantus) info.push(`${e.lantus}L`);
+      if(e.obs) info.push(`"${e.obs}"`);
+
+      return `
+      <div class="day-row" onclick="editEntry(${e.id})">
+        <div class="row-icon ${cls}"><i class="fa-solid ${ico}"></i></div>
+        <div class="row-content">
+          <div class="row-main">
+            <span class="text-muted small fw-bold">${e.cat} ${e.time}</span>
+            <span class="row-val ${valC}">${e.gly?e.gly.toFixed(2):'--'}</span>
+          </div>
+          <div class="row-details">${info.join(' • ')}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="day-card"><div class="day-header">${dateStr}</div>${rows}</div>`;
+  }).join('');
+}
+
+/* --- MEDICAL (RESTAURÉ) --- */
+function addMedicalData(){
+  const t = prompt("Type (ex: HbA1c)"); if(!t) return;
+  const v = prompt("Valeur (ex: 6.5%)"); if(!v) return;
+  medicalData.push({id:Date.now(), date:new Date().toISOString().split('T')[0], type:t, val:v});
+  saveData(); showToast("Ajouté");
+}
+function delMed(id){ if(confirm("Supprimer ?")){ medicalData=medicalData.filter(m=>m.id!==id); saveData(); } }
+
+/* --- HOME & STATS --- */
+function renderHome(){
+  const now=new Date(); const w=new Date(); w.setDate(now.getDate()-7);
+  const rec = entries.filter(e=>new Date(e.date)>=w && e.gly);
+  if(rec.length){
+    const v = rec.map(e=>e.gly);
+    const avg = v.reduce((a,b)=>a+b,0)/v.length;
+    const ok = v.filter(x=>x>=0.70 && x<=1.80).length;
+    document.getElementById('dashAvg').innerText = avg.toFixed(2);
+    document.getElementById('dashTarget').innerText = Math.round((ok/v.length)*100);
+  }
+  // Chart
+  const ctx=document.getElementById('chartHome').getContext('2d');
+  const pts = [...entries].filter(e=>e.gly).slice(0,15).reverse();
+  if(chartRef) chartRef.destroy();
+  chartRef=new Chart(ctx,{type:'line',data:{
+    labels:pts.map(p=>new Date(p.date).toLocaleDateString('fr-FR',{weekday:'short'})),
+    datasets:[{data:pts.map(p=>p.gly), borderColor:'#4f46e5', backgroundColor:'rgba(79,70,229,0.1)', fill:true, tension:0.4, pointRadius:3}]
+  }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{suggestedMin:0.5}}}});
+}
+
+function renderStats(){
+  const avg = (cat) => {
+    const v = entries.filter(e => e.cat === cat && e.gly).map(e => e.gly);
+    return v.length ? (v.reduce((a,b)=>a+b,0)/v.length).toFixed(2) : '-';
+  };
+  document.getElementById('avgMatin').innerText = avg('Matin');
+  document.getElementById('avgMidi').innerText = avg('Midi');
+  document.getElementById('avgSoir').innerText = avg('Soir');
+  
+  const ml = document.getElementById('medicalList');
+  if(medicalData.length===0) ml.innerHTML = '<div class="text-muted p-2">Vide</div>';
+  else ml.innerHTML = medicalData.map(m => `<div class="d-flex justify-content-between border-bottom py-2"><div><b>${m.type}</b>: ${m.val}</div><i class="fa-solid fa-trash text-danger" onclick="delMed(${m.id})"></i></div>`).join('');
+}
+
+function navTo(v, b){
+  document.querySelectorAll('.view-section').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  if(b){ document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+  if(v==='log') renderLog();
+}
+function backupData(){
+  const b = new Blob([JSON.stringify({u:currentUser, d:entries, m:medicalData})], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'backup.json'; a.click();
+}
+</script>
+</body>
+</html>
